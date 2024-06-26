@@ -14,22 +14,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/v1")
-public class CreateFirstProcessController {
+public class IncrementProcessValueController {
 
-    @PostMapping("/create-first-process")
+    @PostMapping("/increment-process-value")
     public ResponseEntity<WorkResponse> handle(@RequestBody @NonNull final WorkRequest workRequest) {
-        // 1. Create a first process object with value 1
-        final FirstProcessObject firstProcessObject = new FirstProcessObject(1);
-
-        // 2. Save in a document to be consumed later by other states in the workflow
+        // 1. Extract the existing first process object
         final Document document = workRequest.getDocument();
+        final FirstProcessObject firstProcessObject =
+                document.extractEntityByType("firstProcessObject", FirstProcessObject.class);
+
+        // 2. Modify the object by incrementing the value by 1
+        firstProcessObject.setValue(firstProcessObject.getValue() + 1);
+
+        // 3. Override the updated object to the document
         document.putEntity("firstProcessObject", firstProcessObject);
 
-        // 3. Return WorkSuccess indicating a successful result along with the updated document and name
+        // 4. Return WorkSuccess indicating a successful result along with the updated document and name
         return ResponseEntity.ok().body(
                 WorkSuccess.builder()
                         .document(document)
-                        .actionName("FirstProcessCreated")
+                        .actionName("ProcessValueIncremented")
                         .build()
         );
     }
